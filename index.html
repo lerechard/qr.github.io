@@ -240,7 +240,7 @@ END:VCARD'
       try {
         await QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: colorDark, light: colorLight }, errorCorrectionLevel });
         els.qr.appendChild(canvas);
-        els.downloadPng.disabled = false; els.copy.disabled = !('clipboard' in navigator && 'write' in navigator.clipboard);
+        els.downloadPng.disabled = false; els.copy.disabled = !('clipboard' in navigator && 'write' in navigator.clipboard && typeof window.ClipboardItem !== 'undefined');
       } catch (e){ console.error(e); els.qr.textContent = 'Failed to generate QR code.'; }
 
       // Prepare SVG string for download
@@ -270,13 +270,25 @@ END:VCARD'
     });
 
     els.paste.addEventListener('click', async ()=>{
-      if(!navigator.clipboard) return;
+      if(!navigator.clipboard || !navigator.clipboard.readText){ return; }
       try { const t = await navigator.clipboard.readText(); if(t){ els.text.value = t; generate(); } } catch {}
+    }); if(t){ els.text.value = t; generate(); } } catch {}
     });
 
     els.copy.addEventListener('click', async ()=>{
       try {
-        const res = await fetch(currentPNG); const blob = await res.blob();
+        if (!('clipboard' in navigator) || !('write' in navigator.clipboard) || typeof window.ClipboardItem === 'undefined') return;
+        const toBlob = () => new Promise(res=>{
+          const c = els.qr.querySelector('canvas');
+          if(!c) return res(null);
+          c.toBlob(b => res(b), 'image/png');
+        });
+        const blob = await toBlob();
+        if(!blob) return;
+        await navigator.clipboard.write([ new ClipboardItem({ [blob.type]: blob }) ]);
+        els.copy.textContent = 'Copied!'; setTimeout(()=> els.copy.textContent='Copy PNG', 1400);
+      } catch(e){ console.warn('Clipboard copy failed', e); }
+    }); const blob = await res.blob();
         await navigator.clipboard.write([ new ClipboardItem({ [blob.type]: blob }) ]);
         els.copy.textContent = 'Copied!'; setTimeout(()=> els.copy.textContent='Copy PNG', 1400);
       } catch(e){ console.warn('Clipboard copy failed', e); }
@@ -304,6 +316,14 @@ END:VCARD'
     // Initial sample
     els.text.value = location.href;
     generate();
+
+    // Feature detection for GitHub Pages compatibility
+    if (!('clipboard' in navigator && 'readText' in navigator.clipboard)) {
+      els.paste.disabled = true;
+    }
+    if (!('clipboard' in navigator && 'write' in navigator.clipboard && typeof window.ClipboardItem !== 'undefined')) {
+      els.copy.disabled = true;
+    }
   </script>
 
   <!-- Ripple filter -->
