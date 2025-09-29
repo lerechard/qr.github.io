@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Code Generator :3</title>
+  <style>
+    :root {
+      --glass-bg: rgba(255,255,255,0.16);
+      --glass-brd: rgba(255,255,255,0.38);
+      --glass-high: rgba(255,255,255,0.7);
+      --text: #0b2540;
+      --muted: #274862;
+      --chip-bg: rgba(255,255,255,0.55);
+      --chip-brd: rgba(16,50,78,0.25);
+      --input-bg1: rgba(255,255,255,0.55);
+      --input-bg2: rgba(255,255,255,0.35);
+      --btn-text: #10324e;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100svh; display: grid; place-items: center; color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      position: relative; overflow-x: hidden;
+    }
+    body::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      background: linear-gradient(120deg, #f6f0ff, #eaf7ff, #fff5e6, #ffe7f1, #e8ffe7);
+      background-size: 400% 400%; animation: pastelShift 30s ease infinite; filter: url(#ripple);
+    }
+    @keyframes pastelShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    .wrap { width: min(980px, 94vw); display: flex; flex-direction: column; gap: 22px; position: relative; z-index: 1; }
+    .glass { background: var(--glass-bg); border: 1px solid var(--glass-brd); box-shadow: 0 10px 30px rgba(0,0,0,0.12), inset 0 1px 0 var(--glass-high); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); border-radius: 20px; }
+
+    header.title { padding: 18px 22px; text-align: center; font-weight: 800; letter-spacing: .3px; font-size: clamp(22px, 3.2vw, 36px); }
+    .lead { padding: 16px 22px; color: var(--muted); line-height: 1.6; }
+
+    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; padding: 16px; }
+    @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+
+    label { font-size: 13px; color: var(--muted); display: block; margin: 4px 0 8px; }
+
+    textarea, input[type="text"], input[type="number"], select {
+      width: 100%; border-radius: 16px; border: 1px solid var(--glass-brd); color: var(--text);
+      padding: 12px 14px; outline: none; font-size: 14px; background: linear-gradient(180deg, var(--input-bg1), var(--input-bg2));
+      box-shadow: inset 0 1px 0 var(--glass-high), 0 10px 25px rgba(0,0,0,0.08);
+      backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    textarea::placeholder { color: #27486288 }
+
+    .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 560px){ .row { grid-template-columns: 1fr; } }
+
+    .range { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+    input[type="range"] { width: 100%; }
+
+    .chips { display:flex; flex-wrap:wrap; gap: 8px; margin-top: 10px; }
+    .chip { appearance: none; border: 1px solid var(--chip-brd); padding: 8px 10px; border-radius: 999px; background: var(--chip-bg); font-size: 12px; color: var(--muted); cursor: pointer; }
+
+    .btn { appearance: none; cursor: pointer; border: 0; padding: 12px 18px; font-weight: 800; letter-spacing: .3px; font-size: 14px; color: var(--btn-text); border-radius: 999px; position: relative; isolation: isolate; background: radial-gradient(120% 180% at 20% 0%, rgba(255,255,255,0.95), rgba(255,255,255,0.6)), linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.45)); box-shadow: 0 12px 28px rgba(48,73,102,0.18), inset 0 1px 0 #ffffff; transition: transform .15s ease, box-shadow .2s ease; }
+    .btn::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(80% 60% at 30% 0%, rgba(255,255,255,0.9), transparent 60%); mix-blend-mode: screen; opacity: .8; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(48,73,102,0.24), inset 0 1px 0 #ffffff; }
+    .btn:active { transform: translateY(0); box-shadow: 0 10px 24px rgba(48,73,102,0.18), inset 0 1px 0 #ffffff; }
+
+    .btn.secondary { background: radial-gradient(120% 180% at 20% 0%, rgba(255,255,255,0.8), rgba(255,255,255,0.5)), linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35)); }
+    .btn[disabled] { opacity: .55; cursor: not-allowed; }
+
+    .panel { padding: 16px; }
+    .preview { display:grid; place-items:center; min-height: 280px; }
+    .qrwrap { background: #fff; padding: 14px; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+
+    footer.note { padding: 12px; text-align: center; color: var(--muted); font-size: 12px; }
+    a { color: #235b8e }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha256-3wz7V92/BEFR9o7mH0qZkKbzBdGSj0m1+QxVmQH5kew=" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="wrap" id="app">
+    <header class="glass title">QR Code Generator</header>
+
+    <section class="glass lead">
+      <p>Type anything, tweak options, and download your QR as PNG or SVG. Paste text, or drag & drop a .txt file.</p>
+    </section>
+
+    <section class="glass">
+      <div class="grid">
+        <!-- Controls -->
+        <div class="panel" style="display:grid; gap:14px; align-content:start">
+          <div>
+            <label for="text">Content</label>
+            <textarea id="text" placeholder="https://example.com or any text"></textarea>
+            <div class="chips" id="quickChips"></div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="size">Size (px)</label>
+              <div class="range">
+                <input id="size" type="range" min="128" max="1024" step="8" value="320" />
+                <input id="sizeNum" type="number" min="128" max="1024" step="8" value="320" />
+              </div>
+            </div>
+            <div>
+              <label for="margin">Margin (modules)</label>
+              <div class="range">
+                <input id="margin" type="range" min="0" max="16" step="1" value="2" />
+                <input id="marginNum" type="number" min="0" max="16" step="1" value="2" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="ecc">Error correction</label>
+              <select id="ecc">
+                <option value="L">L (7%)</option>
+                <option value="M" selected>M (15%)</option>
+                <option value="Q">Q (25%)</option>
+                <option value="H">H (30%)</option>
+              </select>
+            </div>
+            <div class="row" style="grid-template-columns: 1fr 1fr; gap:10px">
+              <div>
+                <label for="dark">Dark</label>
+                <input id="dark" type="text" value="#000000" />
+              </div>
+              <div>
+                <label for="light">Light</label>
+                <input id="light" type="text" value="#ffffff" />
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:2px">
+            <button class="btn" id="gen">Generate</button>
+            <button class="btn secondary" id="downloadPng" disabled>Download PNG</button>
+            <button class="btn secondary" id="downloadSvg" disabled>Download SVG</button>
+            <button class="btn secondary" id="paste">Paste</button>
+            <button class="btn secondary" id="copy" disabled>Copy PNG</button>
+            <button class="btn secondary" id="clear">Clear</button>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="panel preview">
+          <div id="qr" class="qrwrap" aria-live="polite" aria-busy="false"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="glass note">Quick presets below the content box. Supports drag-and-drop.</footer>
+  </main>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const els = {
+      text: $('#text'), size: $('#size'), sizeNum: $('#sizeNum'), margin: $('#margin'), marginNum: $('#marginNum'),
+      ecc: $('#ecc'), dark: $('#dark'), light: $('#light'), gen: $('#gen'),
+      downloadPng: $('#downloadPng'), downloadSvg: $('#downloadSvg'), paste: $('#paste'), copy: $('#copy'), clear: $('#clear'),
+      qr: $('#qr'), chips: $('#quickChips')
+    };
+
+    const presets = [
+      'https://go.fiscon.cc', 'WIFI:T:WPA;S:MyWifi;P:mypassword;;', 'mailto:hello@example.com',
+      'SMSTO:+15550001234:Hey there!', 'MATMSG:TO:hello@example.com;SUB:Hello;BODY:This is a test;;',
+      'geo:37.7749,-122.4194', 'BEGIN:VCARD
+VERSION:3.0
+FN:Jane Doe
+TEL:+1 555-000-1234
+EMAIL:jane@example.com
+END:VCARD'
+    ];
+
+    function makeChip(text){
+      const b = document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=text.split('
+')[0].slice(0,46)+(text.length>46?'…':'');
+      b.title = text; b.addEventListener('click', ()=>{ els.text.value = text; generate(); }); return b;
+    }
+    presets.forEach(p=> els.chips.appendChild(makeChip(p)));
+
+    function eccMap(v){ return { L: 'low', M: 'medium', Q:'quartile', H:'high' }[v] || 'medium'; }
+
+    function parseColor(value, fallback){
+      const s = (value||'').trim();
+      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s)) return s;
+      if(/^rgb(a)?\(/i.test(s)) return s; // rudimentary
+      try { new Option().style.color = s; return s; } catch { return fallback; }
+    }
+
+    function syncRanges(a,b){ a.addEventListener('input', ()=> b.value = a.value ); b.addEventListener('input', ()=> a.value = b.value ); }
+    syncRanges(els.size, els.sizeNum); syncRanges(els.margin, els.marginNum);
+
+    let currentPNG = null; let lastText = '';
+
+    async function generate(){
+      const text = els.text.value.trim();
+      els.qr.setAttribute('aria-busy','true');
+      els.qr.innerHTML = '';
+      els.downloadPng.disabled = true; els.downloadSvg.disabled = true; els.copy.disabled = true;
+      if(!text){ els.qr.removeAttribute('aria-busy'); lastText=''; return; }
+
+      const size = Math.max(128, Math.min(1024, parseInt(els.size.value||320,10)));
+      const margin = Math.max(0, Math.min(32, parseInt(els.margin.value||2,10)));
+      const colorDark = parseColor(els.dark.value, '#000');
+      const colorLight = parseColor(els.light.value, '#fff');
+      const errorCorrectionLevel = eccMap(els.ecc.value);
+
+      // Canvas preview
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      try {
+        await QRCode.toCanvas(canvas, text, { width: size, margin, color: { dark: colorDark, light: colorLight }, errorCorrectionLevel });
+        els.qr.appendChild(canvas);
+        els.downloadPng.disabled = false; els.copy.disabled = !('clipboard' in navigator && 'write' in navigator.clipboard);
+      } catch (e){ console.error(e); els.qr.textContent = 'Failed to generate QR code.'; }
+
+      // Prepare SVG string for download
+      try {
+        currentPNG = canvas.toDataURL('image/png');
+        const svgString = await QRCode.toString(text, { type: 'svg', margin, color: { dark: colorDark, light: colorLight }, errorCorrectionLevel, width: size });
+        els.qr.dataset.svg = svgString; els.downloadSvg.disabled = false;
+      } catch(e){ console.warn('SVG unavailable', e); }
+
+      els.qr.removeAttribute('aria-busy');
+      lastText = text;
+    }
+
+    function download(dataUrl, filename){
+      const a = document.createElement('a'); a.href = dataUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    els.gen.addEventListener('click', generate);
+    for (const el of [els.text, els.size, els.sizeNum, els.margin, els.marginNum, els.ecc, els.dark, els.light]){
+      el.addEventListener('input', debounce(generate, 250));
+    }
+
+    els.downloadPng.addEventListener('click', ()=>{ if(currentPNG) download(currentPNG, 'qr.png'); });
+    els.downloadSvg.addEventListener('click', ()=>{
+      const svg = els.qr.dataset.svg; if(!svg) return;
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob); download(url, 'qr.svg'); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    });
+
+    els.paste.addEventListener('click', async ()=>{
+      if(!navigator.clipboard) return;
+      try { const t = await navigator.clipboard.readText(); if(t){ els.text.value = t; generate(); } } catch {}
+    });
+
+    els.copy.addEventListener('click', async ()=>{
+      try {
+        const res = await fetch(currentPNG); const blob = await res.blob();
+        await navigator.clipboard.write([ new ClipboardItem({ [blob.type]: blob }) ]);
+        els.copy.textContent = 'Copied!'; setTimeout(()=> els.copy.textContent='Copy PNG', 1400);
+      } catch(e){ console.warn('Clipboard copy failed', e); }
+    });
+
+    els.clear.addEventListener('click', ()=>{ els.text.value=''; els.qr.innerHTML=''; els.downloadPng.disabled = true; els.downloadSvg.disabled = true; els.copy.disabled = true; lastText=''; });
+
+    // Drag & drop support
+    window.addEventListener('dragover', e=>{ e.preventDefault(); });
+    window.addEventListener('drop', async e=>{
+      e.preventDefault();
+      const dt = e.dataTransfer; if(!dt) return;
+      if(dt.files && dt.files[0]){
+        const file = dt.files[0];
+        if(file.type.startsWith('text/') || file.name.endsWith('.txt')){
+          const text = await file.text(); els.text.value = text; generate();
+        }
+      } else {
+        const text = dt.getData('text'); if(text){ els.text.value = text; generate(); }
+      }
+    });
+
+    function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), ms); }; }
+
+    // Initial sample
+    els.text.value = location.href;
+    generate();
+  </script>
+
+  <!-- Ripple filter -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <filter id="ripple">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="2">
+        <animate attributeName="baseFrequency" dur="30s" values="0.012;0.018;0.012" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="30" />
+    </filter>
+  </svg>
+</body>
+</html>
