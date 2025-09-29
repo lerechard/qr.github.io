@@ -75,7 +75,18 @@
     footer.note { padding: 12px; text-align: center; color: var(--muted); font-size: 12px; }
     a { color: #235b8e }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha256-3wz7V92/BEFR9o7mH0qZkKbzBdGSj0m1+QxVmQH5kew=" crossorigin="anonymous"></script>
+  <script id="qrcode-lib" src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    // Fallback loader in case the CDN fails
+    (function ensureQRCode(){
+      if (window.QRCode) return;
+      const alt = document.createElement('script');
+      alt.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+      alt.onload = () => console.log('Fallback QRCode loaded');
+      alt.onerror = () => console.error('Failed to load QRCode library from both CDNs.');
+      document.head.appendChild(alt);
+    })();
+  </script>
 </head>
 <body>
   <main class="wrap" id="app">
@@ -151,7 +162,7 @@
       </div>
     </section>
 
-    <footer class="glass note">Quick presets below the content box. Supports drag-and-drop.</footer>
+    <footer class="glass note">Yet another wonderful project by ZF.</footer>
   </main>
 
   <script>
@@ -164,7 +175,7 @@
     };
 
     const presets = [
-      'https://go.fiscon.cc', 'WIFI:T:WPA;S:MyWifi;P:mypassword;;', 'mailto:hello@example.com',
+      'https://example.com', 'WIFI:T:WPA;S:MyWifi;P:mypassword;;', 'mailto:hello@example.com',
       'SMSTO:+15550001234:Hey there!', 'MATMSG:TO:hello@example.com;SUB:Hello;BODY:This is a test;;',
       'geo:37.7749,-122.4194', 'BEGIN:VCARD
 VERSION:3.0
@@ -200,7 +211,22 @@ END:VCARD'
       els.qr.setAttribute('aria-busy','true');
       els.qr.innerHTML = '';
       els.downloadPng.disabled = true; els.downloadSvg.disabled = true; els.copy.disabled = true;
-      if(!text){ els.qr.removeAttribute('aria-busy'); lastText=''; return; }
+
+      if(!window.QRCode){
+        els.qr.textContent = 'Loading QR engine…';
+        // Try to trigger fallback again if needed
+        const existing = document.getElementById('qrcode-lib');
+        if (existing && !existing.dataset.retry){
+          existing.dataset.retry = '1';
+          const alt = document.createElement('script');
+          alt.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+          document.head.appendChild(alt);
+        }
+        els.qr.removeAttribute('aria-busy');
+        return;
+      }
+
+      if(!text){ els.qr.removeAttribute('aria-busy'); return; }
 
       const size = Math.max(128, Math.min(1024, parseInt(els.size.value||320,10)));
       const margin = Math.max(0, Math.min(32, parseInt(els.margin.value||2,10)));
@@ -225,7 +251,6 @@ END:VCARD'
       } catch(e){ console.warn('SVG unavailable', e); }
 
       els.qr.removeAttribute('aria-busy');
-      lastText = text;
     }
 
     function download(dataUrl, filename){
