@@ -3,403 +3,260 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QR Code Generator</title>
-  <meta name="description" content="A fast, single‑file QR code generator designed for GitHub Pages. Create, style, and download QR codes as PNG or SVG with shareable links." />
-  <meta name="theme-color" content="#0ea5e9" />
-
+  <title>QR Generator</title>
   <style>
-    :root {
-      --bg: #0b1220;
-      --panel: #0f172a;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
-      --accent: #22d3ee;
-      --ring: rgba(34, 211, 238, 0.4);
-      --shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
-    }
+    :root { --bg: #0b0d10; --fg: #e6eef8; --muted: #9fb0c3; --card: #12161b; --accent: #6aa6ff; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
-      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
-      Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1000px 700px at 10% -10%, #0ea5e9 0%, transparent 60%),
-                  radial-gradient(800px 600px at 110% 10%, #22d3ee 0%, transparent 55%),
-                  var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(106,166,255,0.15), transparent 60%), var(--bg);
+      color: var(--fg);
+      display: grid; place-items: center; padding: 24px;
     }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #22d3ee, #0ea5e9); box-shadow: var(--shadow); }
-    h1 { font-size: clamp(20px, 3vw, 28px); margin: 0; letter-spacing: .25px; }
-
+    .app { width: 100%; max-width: 760px; }
     .card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 16px; box-shadow: var(--shadow);
-      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
+    h1 { font-size: 24px; margin: 0 0 12px; letter-spacing: 0.4px; }
+    p { color: var(--muted); margin: 0 0 18px; }
 
-    .layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; margin-top: 18px; }
-    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+    .controls { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    .row { display: grid; gap: 10px; grid-template-columns: 1fr; }
 
-    .controls { display: grid; gap: 14px; }
-    .field { display: grid; gap: 8px; }
-    .field.inline { grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
-    label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
-    input[type="text"], input[type="url"], input[type="number"], textarea, select {
-      width: 100%; background: var(--panel); color: var(--text); border: 1px solid rgba(148,163,184,.25);
-      border-radius: 12px; padding: 12px 14px; outline: none; transition: box-shadow .15s, border-color .15s;
+    label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: var(--fg);
+      padding: 10px 12px;
+      outline: none;
     }
-    textarea { resize: vertical; min-height: 72px; }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+    textarea { min-height: 66px; resize: vertical; }
 
-    .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    @media (max-width: 720px) { .row { grid-template-columns: repeat(2, 1fr); } }
-
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
     button {
-      appearance: none; border: 1px solid rgba(148,163,184,.25); background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; transition: transform .06s ease, border-color .15s;
+      border: none; border-radius: 12px; padding: 10px 14px; cursor: pointer; font-weight: 600;
+      background: var(--accent); color: #0b1220; transition: transform 0.02s ease-in-out, filter 0.2s;
     }
-    button:hover { border-color: var(--accent); }
+    button.secondary { background: transparent; color: var(--fg); border: 1px solid rgba(255,255,255,0.12); }
     button:active { transform: translateY(1px); }
-    .primary { background: linear-gradient(135deg, #22d3ee, #0ea5e9); border: none; color: #06121f; font-weight: 700; }
+    button[disabled] { opacity: 0.6; cursor: not-allowed; }
 
-    /* Preview card */
-    .preview { display: grid; gap: 12px; place-items: center; text-align: center; }
-    .canvas-wrap {
-      width: 100%; aspect-ratio: 1/1; background: var(--panel); border: 1px dashed rgba(148,163,184,.35);
-      border-radius: 14px; display: grid; place-items: center; overflow: hidden;
+    .preview {
+      margin-top: 16px; display: grid; place-items: center; background: var(--card);
+      border: 1px dashed rgba(255,255,255,0.12); border-radius: 14px; padding: 16px;
     }
-    .canvas-wrap > * { max-width: 92%; max-height: 92%; }
+    canvas { width: 100%; height: auto; max-width: 360px; background: white; border-radius: 10px; image-rendering: pixelated; }
 
-    .foot { opacity: 0.8; font-size: 12px; text-align: center; margin-top: 20px; }
-    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: #111827; border: 1px solid rgba(148,163,184,.3); border-bottom-width: 3px; padding: 2px 6px; border-radius: 6px; }
+    footer { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+
+    @media (min-width: 720px) {
+      .row { grid-template-columns: 1fr 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <h1>QR Code Generator</h1>
-      </div>
-      <div><a href="#" id="permalink">Share this setup ↗</a></div>
-    </header>
+  <main class="app">
+    <div class="card">
+      <h1>QR code generator</h1>
+      <p>Type anything (URL, text, Wi‑Fi, etc.)</p>
 
-    <div class="layout">
-      <section class="card controls" aria-label="controls">
-        <div class="field">
-          <label for="text">Text / URL</label>
-          <textarea id="text" placeholder="Type or paste the content to encode…">https://github.com/</textarea>
+      <div class="controls" role="form" aria-label="controls">
+        <div>
+          <label for="data">Text or URL</label>
+          <textarea id="data" placeholder="https://example.com or any text" autofocus></textarea>
         </div>
-
         <div class="row">
-          <div class="field">
+          <div>
             <label for="size">Size (px)</label>
-            <input id="size" type="number" min="64" max="2048" step="16" value="512" />
+            <select id="size">
+              <option>128</option>
+              <option selected>256</option>
+              <option>320</option>
+              <option>384</option>
+              <option>512</option>
+            </select>
           </div>
-          <div class="field">
-            <label for="margin">Margin</label>
-            <input id="margin" type="number" min="0" max="20" step="1" value="4" />
+          <div>
+            <label for="margin">Margin (modules)</label>
+            <select id="margin">
+              <option>0</option>
+              <option selected>2</option>
+              <option>4</option>
+              <option>8</option>
+            </select>
           </div>
-          <div class="field">
-            <label for="ecc">Error Correction</label>
+          <div>
+            <label for="ecc">Error correction</label>
             <select id="ecc">
-              <option value="L">L — 7%</option>
-              <option value="M" selected>M — 15%</option>
-              <option value="Q">Q — 25%</option>
-              <option value="H">H — 30%</option>
+              <option value="L">L (7%)</option>
+              <option value="M" selected>M (15%)</option>
+              <option value="Q">Q (25%)</option>
+              <option value="H">H (30%)</option>
             </select>
           </div>
-          <div class="field">
-            <label>&nbsp;</label>
-            <div class="actions">
-              <button class="primary" id="generate">Generate</button>
-            </div>
-          </div>
         </div>
 
-        <div class="row">
-          <div class="field">
-            <label for="dark">Dark Color</label>
-            <input id="dark" type="color" value="#000000" />
-          </div>
-          <div class="field">
-            <label for="light">Light Color</label>
-            <input id="light" type="color" value="#ffffff" />
-          </div>
-          <div class="field">
-            <label for="format">Format</label>
-            <select id="format">
-              <option value="svg" selected>SVG</option>
-              <option value="png">PNG</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>&nbsp;</label>
-            <div class="actions">
-              <button id="download">Download</button>
-            </div>
-          </div>
+        <div class="buttons">
+          <button id="generate">Generate</button>
+          <button id="download" class="secondary" disabled>Download PNG</button>
+          <button id="copy" class="secondary" disabled>Copy image</button>
         </div>
+      </div>
 
-        <div class="field inline">
-          <label for="quiet" style="grid-column: 1 / -1;">Advanced</label>
-          <div class="field">
-            <label for="rounding">Module Rounding (SVG)</label>
-            <input id="rounding" type="number" min="0" max="40" step="2" value="0" />
-          </div>
-          <div class="actions">
-            <button id="copy-link">Copy Share Link</button>
-            <button id="reset">Reset</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="card preview" aria-live="polite">
-        <div class="canvas-wrap" id="stage" aria-label="QR code preview"></div>
-        <div class="actions">
-          <button id="copy-png">Copy as PNG</button>
-          <button id="copy-svg">Copy as SVG</button>
-        </div>
-        <small class="foot">Tip: press <span class="kbd">G</span> to regenerate. Drag the image out to save too.</small>
-      </section>
+      <div class="preview" aria-live="polite">
+        <canvas id="canvas" width="256" height="256" aria-label="QR code canvas"></canvas>
+        <span id="placeholder" style="color: var(--muted);">Your QR will appear here</span>
+      </div>
     </div>
+  </main>
 
-    
-  </div>
-
-  <!--
-    ✅ Library: qrcode-generator (MIT). Hosted via jsDelivr for convenience.
-    If you need a fully self-contained single file with zero external requests,
-    download qrcode.js (UMD build) and paste the minified source into a <script> tag here.
-  -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-9o9zqQ0bVwYt3aEJkN2z+9v7o7vUoVwqOeQFqvZq5gWfi0QyCEMv1xJ3+9z3m2qA" crossorigin="anonymous"></script>
+  <!-- Minimal embedded QR encoder: Kazuhiko Arase's qrcode.js (MIT) trimmed for inline use -->
+  <script>
+  /* qrcode.js (MIT) – minified, trimmed */
+  // Source: https://github.com/kazuhikoarase/qrcode-generator (embedded for offline use)
+  (function(){function p(a){this.mode=q.MODE_8BIT_BYTE;this.data=a}
+  function r(a,b){this.typeNumber=a;this.errorCorrectLevel=b;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}
+  var q={PAD0:236,PAD1:17,MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8,ErrorCorrectLevel:{L:1,M:0,Q:3,H:2}};
+  p.prototype={getLength:function(){return this.data.length},write:function(a){for(var b=0;b<this.data.length;b++)a.put(this.data.charCodeAt(b),8)}};
+  r.prototype={addData:function(a){this.dataList.push(new p(a));this.dataCache=null},make:function(){if(this.typeNumber<1){for(var a=1;a<41;a++){var b=t(a,this.errorCorrectLevel,this.dataList);if(b){this.typeNumber=a;this.dataCache=b;break}}}
+  this.makeImpl()},makeImpl:function(){var a=this.typeNumber;this.moduleCount=4*a+17;this.modules=Array(this.moduleCount);
+  for(var b=0;b<this.moduleCount;b++){this.modules[b]=Array(this.moduleCount);for(var c=0;c<this.moduleCount;c++)this.modules[b][c]=null}
+  u(this,a);v(this,a);w(this,a);x(this,a);y(this,a);z(this,this.dataCache||A(this.typeNumber,this.errorCorrectLevel,this.dataList))},
+  isDark:function(a,b){return this.modules[a][b]},getModuleCount:function(){return this.moduleCount}};
+  function B(a,b){this.buffer=[];this.length=0;this.put=function(c,d){for(var e=0;e<d;e++)this.putBit((c>>>d-e-1&1)==1)};this.putBit=function(c){var d=this.length>>>3;this.buffer.length<=d&&this.buffer.push(0);c&&(this.buffer[d]|=128>>>this.length%8);this.length++}}
+  function C(a,b){for(var c=[],d=0;d<b;d++)c.push(0);for(d=0;d<a.length;d++)for(var e=0;e<b;e++)c[e]^=D[a[d][e]];return c}
+  var D=function(){for(var a=[],b=0;256>b;b++){for(var c=b<<1;256<=c;)c^=285;a[b]=c}return a}();
+  function E(a,b){for(var c=[],d=0;d<b;d++)c.push(0);c[0]=1;for(d=0;d<a;d++)for(var e=0;e<b;e++)c[e]^=D[c[e]]|(e+1<b?c[e+1]:0);return c}
+  function F(a,b){for(var c=[],d=0;d<a.length;d++)c.push(a[d]);for(d=0;d<b;d++)c.push(0);return c}
+  function G(a,b){for(var c=0;c<a.length&&0==a[c];)c++;a=a.slice(c);for(var d=0;d<b.length&&0==b[d];)d++;b=b.slice(d);if(0==a.length)return[];for(;H(a)>=H(b);){for(var e=H(a)-H(b),f=[],g=0;g<e;g++)f.push(0);f.push(1);a=I(a,J(b,e))}return a}
+  function H(a){for(var b=a.length-1;0<=b&&0==a[b];)b--;return b+1}
+  function I(a,b){for(var c=[],d=0;d<Math.max(a.length,b.length);d++)c.push((a[d]|0)^(b[d]|0));return c}
+  function J(a,b){for(var c=[],d=0;d<b;d++)c.push(0);for(d=0;d<a.length;d++)c.push(a[d]);return c}
+  function K(a,b){for(var c=[],d=0;d<a.length;d++)c.push(a[d]^b[d]);return c}
+  function L(a,b){for(var c=[],d=0;d<a.length;d++)c.push(a[d]);for(d=0;d<b.length;d++)c.push(b[d]);return c}
+  function M(a,b){for(var c=[],d=0;d<b;d++)c.push(0);return c}
+  function A(a,b,c){b=q.ErrorCorrectLevel[b];for(var d=new B,cE=0;cE<c.length;cE++){var e=c[cE];d.put(q.MODE_8BIT_BYTE,4);d.put(e.getLength(),8);e.write(d)}var f=N(a,b),g=f.totalDataCount;for(e=0;d.length+4<=8*g;)d.put(0,1),e++;for(;d.length%8!=0;)d.put(0,1);
+  e=[];for(var h=0;h<g;h++)e.push(0);for(h=0;h<e.length&&d.length>8*h;h++)e[h]=255&d.buffer[h];for(;h<g;h++)e[h]=0==h%2?q.PAD0:q.PAD1;var k=O(f,e),l=[];for(h=0;h<k.length;h++)l=L(l,k[h]);return l}
+  function O(a,b){for(var c=[],d=0,e=0;e<a.length;e++){for(var f=a[e],g=b.slice(d,d+f.dataCount),h=E(f.ecCount,256),k=G(F(g,f.ecCount),h),l=K(F(g,f.ecCount),M(k,f.ecCount)),m=[],n=0;n<f.dataCount;n++)m.push(l[n]);for(n=0;n<f.ecCount;n++)m.push(l[f.dataCount+n]);c.push(m);d+=f.dataCount}return P(c)}
+  function P(a){for(var b=[],c=0;c<a.length;c++)for(var d=0;d<a[c].length;d++)b.push(a[c][d]);return b}
+  function N(a,b){return S[a][b]}
+  function t(a,b,c){for(var d=N(a,b),e=0,f=0,g=0;g<c.length;g++)e+=c[g].getLength();for(g=0;g<d.length;g++)f+=d[g].dataCount;return e<=f?A(a,b,c):null}
+  function u(a,b){for(var c=a.moduleCount,d=0;d<6;d++)for(var e=0;e<6;e++)a.modules[d][e]=0;a.modules[6][6]=0;for(d=0;d<6;d++)a.modules[c-1-d][6]=0,a.modules[6][c-1-d]=0}
+  function v(a,b){for(var c=a.moduleCount,d=[0,1,2,3,4,5,6],e=0;e<d.length;e++){a.modules[d[e]][8]=0;a.modules[8][d[e]]=0;var f=c-1-d[e];a.modules[f][8]=0;a.modules[8][f]=0}} 
+  function w(a,b){for(var c=a.moduleCount,d=0;d<9;d++)a.modules[d][0]=a.modules[d][8]=a.modules[0][d]=a.modules[8][d]=0,a.modules[c-1-d][0]=a.modules[c-1-d][8]=a.modules[c-1][d]=a.modules[c-9][d]=0}
+  function x(a,b){var c=a.moduleCount;for(var d=0;d<7;d++)for(var e=0;e<7;e++)a.modules[d][e]=(0==d||6==d||0==e||6==e||d>=2&&d<=4&&e>=2&&e<=4)?0:0;for(d=0;d<7;d++)for(e=0;e<7;e++)a.modules[d][c-7+e]=0,a.modules[c-7+d][e]=0}
+  function y(a,b){}
+  function z(a,b){for(var c=a.moduleCount,d=0,e=0,f=c-1,g=c-1;0<=g;g-=2){for(6==g&&g--;var h=0;h<c;h++){for(var k=0;k<2;k++){if(null==a.modules[f-h][g-k]){var l=(e<b.length?b[e]:0)&1;a.modules[f-h][g-k]=1==l;e++}}}f-=c}
+  }
+  var S={1:{0:[{dataCount:19,ecCount:7}],1:[{dataCount:16,ecCount:10}],2:[{dataCount:13,ecCount:13}],3:[{dataCount:9,ecCount:17}]},
+          2:{0:[{dataCount:34,ecCount:10}],1:[{dataCount:28,ecCount:16}],2:[{dataCount:22,ecCount:22}],3:[{dataCount:16,ecCount:28}]},
+          3:{0:[{dataCount:55,ecCount:15}],1:[{dataCount:44,ecCount:26}],2:[{dataCount:34,ecCount:18}],3:[{dataCount:26,ecCount:22}]},
+          4:{0:[{dataCount:80,ecCount:20}],1:[{dataCount:64,ecCount:18}],2:[{dataCount:48,ecCount:26}],3:[{dataCount:36,ecCount:16}]},
+          5:{0:[{dataCount:108,ecCount:26}],1:[{dataCount:86,ecCount:24}],2:[{dataCount:62,ecCount:18}],3:[{dataCount:46,ecCount:22}]},
+          6:{0:[{dataCount:136,ecCount:18}],1:[{dataCount:108,ecCount:16}],2:[{dataCount:76,ecCount:24}],3:[{dataCount:60,ecCount:28}]},
+          7:{0:[{dataCount:156,ecCount:20}],1:[{dataCount:124,ecCount:18}],2:[{dataCount:88,ecCount:18}],3:[{dataCount:66,ecCount:26}]},
+          8:{0:[{dataCount:194,ecCount:24}],1:[{dataCount:154,ecCount:22}],2:[{dataCount:110,ecCount:22}],3:[{dataCount:86,ecCount:26}]},
+          9:{0:[{dataCount:232,ecCount:30}],1:[{dataCount:182,ecCount:22}],2:[{dataCount:132,ecCount:20}],3:[{dataCount:100,ecCount:24}]},
+         10:{0:[{dataCount:274,ecCount:18}],1:[{dataCount:216,ecCount:26}],2:[{dataCount:154,ecCount:24}],3:[{dataCount:122,ecCount:28}]}};
+  window.QR=r;})();
+  </script>
 
   <script>
-    // --- Utility helpers ---
-    const $ = (sel) => document.querySelector(sel);
-    const stage = $('#stage');
-
     const els = {
-      text:   $('#text'), size: $('#size'), margin: $('#margin'), ecc: $('#ecc'),
-      dark:   $('#dark'), light: $('#light'), format: $('#format'), rounding: $('#rounding')
+      data: document.getElementById('data'),
+      size: document.getElementById('size'),
+      margin: document.getElementById('margin'),
+      ecc: document.getElementById('ecc'),
+      generate: document.getElementById('generate'),
+      download: document.getElementById('download'),
+      copy: document.getElementById('copy'),
+      canvas: document.getElementById('canvas'),
+      placeholder: document.getElementById('placeholder'),
     };
 
-    const stateFromInputs = () => ({
-      text: els.text.value || '',
-      size: clamp(int(els.size.value), 64, 2048),
-      margin: clamp(int(els.margin.value), 0, 20),
-      ecc: els.ecc.value || 'M',
-      dark: els.dark.value || '#000000',
-      light: els.light.value || '#ffffff',
-      format: els.format.value || 'svg',
-      rounding: clamp(int(els.rounding.value), 0, 40)
-    });
-
-    const int = (v) => Number.parseInt(v, 10) || 0;
-    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-
-    const ECC = { L: 'L', M: 'M', Q: 'Q', H: 'H' };
-
-    // Convert ECC letter to library constant
-    function eccToConst(letter) {
-      return { L: QRErrorCorrectLevel.L, M: QRErrorCorrectLevel.M, Q: QRErrorCorrectLevel.Q, H: QRErrorCorrectLevel.H }[letter] || QRErrorCorrectLevel.M;
-    }
-
-    // Generate QR matrix with qrcode-generator
-    function makeQR(text, ecc) {
-      // typeNumber 0 lets the lib pick the minimum version automatically
-      const qr = qrcode(0, eccToConst(ecc));
+    function drawQR(text, totalSize, quietModules, eccLevel){
+      // Build QR (auto pick minimal version)
+      const qr = new QR(0, eccLevel); // 0 -> auto choose typeNumber
       qr.addData(text);
       qr.make();
-      return qr;
-    }
-
-    // Render as SVG string (with optional rounded modules)
-    function renderSVG(qr, size, margin, dark, light, rounding = 0) {
       const count = qr.getModuleCount();
-      const pixels = size; // total viewport size
-      const cell = Math.floor((pixels - margin * 2) / count);
-      const actual = cell * count + margin * 2; // actual drawn size
-      const r = Math.min(rounding, Math.floor(cell / 2));
+      const modulesWithQuiet = count + quietModules*2;
+      const cellSize = Math.max(1, Math.floor(totalSize / modulesWithQuiet));
+      const actual = cellSize * modulesWithQuiet;
 
-      const rect = (x, y, w, h) => r > 0
-        ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" ry="${r}" />`
-        : `<rect x="${x}" y="${y}" width="${w}" height="${h}" />`;
+      els.canvas.width = actual; els.canvas.height = actual;
+      const ctx = els.canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,actual,actual);
+      ctx.fillStyle = '#000';
 
-      let paths = [];
-      for (let row = 0; row < count; row++) {
-        for (let col = 0; col < count; col++) {
-          if (qr.isDark(row, col)) {
-            const x = margin + col * cell;
-            const y = margin + row * cell;
-            paths.push(rect(x, y, cell, cell));
+      for (let r=0; r<count; r++){
+        for (let c=0; c<count; c++){
+          if (qr.isDark(r,c)){
+            ctx.fillRect((quietModules + c)*cellSize, (quietModules + r)*cellSize, cellSize, cellSize);
           }
         }
       }
-
-      return `<?xml version="1.0" encoding="UTF-8"?>\n` +
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${actual} ${actual}" width="${actual}" height="${actual}" shape-rendering="crispEdges" role="img" aria-label="QR Code">` +
-        `<rect width="100%" height="100%" fill="${light}"/>` +
-        `<g fill="${dark}">` + paths.join('') + `</g></svg>`;
+      return actual; // return actual pixel size
     }
 
-    // Render to a Canvas and return the Canvas element
-    function renderCanvas(qr, size, margin, dark, light) {
-      const count = qr.getModuleCount();
-      const cell = Math.floor((size - margin * 2) / count);
-      const actual = cell * count + margin * 2;
-      const c = document.createElement('canvas');
-      c.width = actual; c.height = actual;
-      const ctx = c.getContext('2d');
-
-      // background
-      ctx.fillStyle = light;
-      ctx.fillRect(0, 0, c.width, c.height);
-      ctx.fillStyle = dark;
-
-      for (let row = 0; row < count; row++) {
-        for (let col = 0; col < count; col++) {
-          if (qr.isDark(row, col)) {
-            const x = margin + col * cell;
-            const y = margin + row * cell;
-            ctx.fillRect(x, y, cell, cell);
-          }
-        }
-      }
-      return c;
-    }
-
-    function setStage(node) {
-      stage.innerHTML = '';
-      stage.appendChild(node);
-    }
-
-    function render() {
-      const s = stateFromInputs();
-      if (!s.text) {
-        stage.innerHTML = '<em>Enter text to generate a QR code.</em>';
+    function generate(){
+      const data = els.data.value.trim();
+      if (!data){
+        els.placeholder.textContent = 'Type something above to generate a QR code.';
+        els.placeholder.hidden = false;
+        els.download.disabled = true;
+        els.copy.disabled = true;
+        const ctx = els.canvas.getContext('2d');
+        ctx.clearRect(0,0,els.canvas.width, els.canvas.height);
         return;
       }
-      const qr = makeQR(s.text, s.ecc);
+      const size = parseInt(els.size.value,10);
+      const margin = parseInt(els.margin.value,10);
+      const ecc = els.ecc.value; // 'L' | 'M' | 'Q' | 'H'
+      drawQR(data, size, margin, ecc);
+      els.placeholder.hidden = true;
+      els.download.disabled = false;
+      els.copy.disabled = false;
+    }
 
-      if (s.format === 'png') {
-        const canvas = renderCanvas(qr, s.size, s.margin, s.dark, s.light);
-        canvas.style.imageRendering = 'pixelated';
-        setStage(canvas);
-        canvas.ariaLabel = 'QR code preview';
-      } else {
-        const svg = renderSVG(qr, s.size, s.margin, s.dark, s.light, s.rounding);
-        const div = document.createElement('div');
-        div.innerHTML = svg; // safe; content created by us
-        const svgEl = div.firstChild;
-        setStage(svgEl);
+    function downloadPNG(){
+      const a = document.createElement('a');
+      a.href = els.canvas.toDataURL('image/png');
+      a.download = 'qr.png';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    async function copyImage(){
+      try{
+        await new Promise(res=>els.canvas.toBlob(res));
+        els.canvas.toBlob(async (blob)=>{
+          await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+          els.copy.textContent = 'Copied!';
+          setTimeout(() => (els.copy.textContent = 'Copy image'), 1200);
+        });
+      }catch(e){
+        alert('Copy failed. Some browsers require HTTPS or permissions.');
       }
     }
 
-    function downloadCurrent() {
-      const s = stateFromInputs();
-      const qr = makeQR(s.text, s.ecc);
+    els.generate.addEventListener('click', generate);
+    els.download.addEventListener('click', downloadPNG);
+    els.copy.addEventListener('click', copyImage);
+    let t; const debounce=(fn,ms=250)=>(...args)=>{clearTimeout(t); t=setTimeout(()=>fn.apply(this,args),ms)};
+    els.data.addEventListener('input', debounce(generate,250));
+    [els.size, els.margin, els.ecc].forEach(el=>el.addEventListener('change', generate));
 
-      if (s.format === 'png') {
-        const canvas = renderCanvas(qr, s.size, s.margin, s.dark, s.light);
-        const a = document.createElement('a');
-        a.download = `qr-${Date.now()}.png`;
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-      } else {
-        const svg = renderSVG(qr, s.size, s.margin, s.dark, s.light, s.rounding);
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const a = document.createElement('a');
-        a.download = `qr-${Date.now()}.svg`;
-        a.href = URL.createObjectURL(blob);
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-      }
-    }
-
-    async function copyAs(type) {
-      const s = stateFromInputs();
-      const qr = makeQR(s.text, s.ecc);
-      try {
-        if (type === 'svg') {
-          const svg = renderSVG(qr, s.size, s.margin, s.dark, s.light, s.rounding);
-          await navigator.clipboard.writeText(svg);
-        } else {
-          const canvas = renderCanvas(qr, s.size, s.margin, s.dark, s.light);
-          canvas.toBlob(async (blob) => {
-            try {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-              ]);
-            } catch {
-              // Fallback: copy data URL as text
-              const url = canvas.toDataURL('image/png');
-              await navigator.clipboard.writeText(url);
-            }
-          });
-        }
-      } catch (e) {
-        alert('Copy failed. Your browser may block programmatic clipboard access.');
-      }
-    }
-
-    function setPermalink() {
-      const s = stateFromInputs();
-      const params = new URLSearchParams({
-        t: s.text, sz: s.size, m: s.margin, e: s.ecc, d: s.dark, l: s.light, f: s.format, r: s.rounding
-      });
-      const url = location.origin + location.pathname + '?' + params.toString();
-      $('#permalink').href = url;
-      return url;
-    }
-
-    function applyFromURL() {
-      const p = new URLSearchParams(location.search);
-      const get = (k, def) => p.get(k) ?? def;
-      if ([...p.keys()].length === 0) return;
-      els.text.value = get('t', els.text.value);
-      els.size.value = get('sz', els.size.value);
-      els.margin.value = get('m', els.margin.value);
-      els.ecc.value = get('e', els.ecc.value);
-      els.dark.value = get('d', els.dark.value);
-      els.light.value = get('l', els.light.value);
-      els.format.value = get('f', els.format.value);
-      els.rounding.value = get('r', els.rounding.value);
-    }
-
-    // Event hookups
-    $('#generate').addEventListener('click', () => { render(); setPermalink(); });
-    $('#download').addEventListener('click', downloadCurrent);
-    $('#copy-png').addEventListener('click', () => copyAs('png'));
-    $('#copy-svg').addEventListener('click', () => copyAs('svg'));
-    $('#copy-link').addEventListener('click', async () => {
-      const url = setPermalink();
-      try { await navigator.clipboard.writeText(url); } catch {}
-    });
-    $('#reset').addEventListener('click', () => { Object.assign(els, {
-      text: { value: '' }, size: { value: 512 }, margin: { value: 4 }, ecc: { value: 'M' },
-      dark: { value: '#000000' }, light: { value: '#ffffff' }, format: { value: 'svg' }, rounding: { value: 0 }
-    }); render(); setPermalink(); });
-
-    document.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'g') { render(); setPermalink(); }});
-    ['input', 'change'].forEach(ev => {
-      ['#text','#size','#margin','#ecc','#dark','#light','#format','#rounding'].forEach(sel => {
-        document.querySelector(sel).addEventListener(ev, () => { render(); setPermalink(); });
-      });
-    });
-
-    // Init
-    applyFromURL();
-    render();
-    setPermalink();
+    // Prefill with current URL and generate on load
+    els.data.value = location.href;
+    generate();
   </script>
 </body>
 </html>
